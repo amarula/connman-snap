@@ -69,17 +69,10 @@ parts:
       - --libexecdir=/usr/lib
       - --disable-polkit
       - CFLAGS=-O2
-    stage-packages:
-      - to armhf:
-        - libxtables12:armhf
-      - to arm64:
-        - libxtables12:arm64
-      - else:
-        - libxtables12
     stage:
       - -lib
       - -usr/include
-      - -usr/share
+      - -usr/share/man
     override-pull: |
       snapcraftctl pull
       snapcraftctl set-version $(git describe --tag)
@@ -88,6 +81,23 @@ parts:
       # copy over default config
       mkdir -p ${SNAPCRAFT_PART_INSTALL}/etc/connman
       cp src/main.conf ${SNAPCRAFT_PART_INSTALL}/etc/connman
+
+  dependencies:
+    plugin: nil
+    stage-packages:
+      - to armhf:
+        - libxtables12:armhf
+        - kmod:armhf
+      - to arm64:
+        - libxtables12:arm64
+        - kmod:arm64
+      - else:
+        - libxtables12
+        - kmod
+    stage:
+      - -etc
+      - -lib
+      - -usr/share
 
 build-packages:
   - intltool
