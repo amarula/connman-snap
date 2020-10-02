@@ -1,0 +1,135 @@
+name: connman
+base: core18
+summary: Network management framework
+description: |
+  ConnMan is a daemon for managing Internet connections within embedded
+  device and integrates a vast range of communication features usually
+  split between many daemons such as DHCP, DNS and NTP. The result of
+  this consolidation is low memory consumption with a fast, coherent,
+  synchronized reaction to changing network conditions.
+  ConnMan is a fully modular system that can be extended, through
+  plug-ins, to support all kinds of wired or wireless technologies.
+  The plug-in approach allows for easy adaption and modification for
+  various use cases.
+
+grade: stable
+confinement: strict
+adopt-info: connman
+
+slots:
+  connmand:
+    interface: dbus
+    bus: system
+    name: net.connman
+
+plugs:
+  connmanctl:
+    interface: dbus
+    bus: system
+    name: net.connman
+  wpa: # need to figure out who is provider here
+    interface: dbus
+    bus: system
+    name: fi.w1.wpa_supplicant1
+
+apps:
+  connmanctl:
+    command: usr/bin/connmanctl
+    plugs:
+      - connmanctl
+
+  connmand:
+    command: usr/sbin/connmand -n -d -c $SNAP_COMMON/etc/connman/main.conf
+    daemon: simple
+    slots:
+      - connmand
+    plugs:
+      - ofono
+      - ppp
+      - network
+      - network-bind
+      - network-control
+      - network-observe
+      - hostname-control
+      - log-observe
+      - firewall-control
+      - kernel-module-observe
+      - wpa
+
+parts:
+  connman:
+    plugin: autotools
+    source: https://git.kernel.org/pub/scm/network/connman/connman.git
+    source-tag: "1.38"
+    configflags:
+      # Disable all features we don't want enabled as we're not
+      # supporting them (yet).
+      - --prefix=/usr
+      - --libdir=/usr/lib
+      - --libexecdir=/usr/lib
+      - --disable-polkit
+      - CFLAGS=-O2
+    stage-packages:
+      - to armhf:
+        - libxtables12:armhf
+      - to arm64:
+        - libxtables12:arm64
+      - else:
+        - libxtables12
+    stage:
+      - -lib
+      - -usr/include
+      - -usr/share
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version $(git describe --tag)
+    override-build: |
+      snapcraftctl build
+      # copy over default config
+      mkdir -p ${SNAPCRAFT_PART_INSTALL}/etc/connman
+      cp src/main.conf ${SNAPCRAFT_PART_INSTALL}/etc/connman
+
+build-packages:
+  - intltool
+  - gtk-doc-tools
+  - libxtables12
+  - wpasupplicant
+  - systemd
+  - iptables
+  - ofono
+  - ofono-dev
+  - bluez
+  - ppp-dev
+  - libbluetooth-dev
+  - libnftnl-dev
+  - to armhf:
+    - libudev-dev:armhf
+    - libgnutls28-dev:armhf
+    - libidn2-0-dev:armhf
+    - libreadline-dev:armhf
+    - libglib2.0-dev:armhf
+    - libsystemd-dev:armhf
+    - libdbus-1-dev:armhf
+    - libxtables-dev:armhf
+    - libmnl-dev:armhf
+  - to arm64:
+    - libudev-dev:arm64
+    - libgnutls28-dev:arm64
+    - libidn2-0-dev:arm64
+    - libreadline-dev:arm64
+    - libglib2.0-dev:arm64
+    - libsystemd-dev:arm64
+    - libdbus-1-dev:arm64
+    - libxtables-dev:arm64
+    - libmnl-dev:arm64
+  - else:
+    - libudev-dev
+    - libgnutls28-dev
+    - libidn2-0-dev
+    - libreadline-dev
+    - libglib2.0-dev
+    - libsystemd-dev
+    - libdbus-1-dev
+    - libxtables-dev
+    - libmnl-dev
+
