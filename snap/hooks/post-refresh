@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+# copy defaul config file
+if [ ! -e ${SNAP_COMMON}/etc/connman/main.conf ]; then
+  mkdir -p ${SNAP_COMMON}/etc/connman
+  cp ${SNAP}/etc/connman/main.conf ${SNAP_COMMON}/etc/connman
+fi
