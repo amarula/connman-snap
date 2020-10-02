@@ -1,0 +1,13 @@
+azure-artifacts/
+
+*.deb
+
+# snap specific files
+*.snap
+*.bz2
+parts/
+prime/
+snap/.snapcraft/
+stage/
+
+*.assert
