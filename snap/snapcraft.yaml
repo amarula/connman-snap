@@ -77,6 +77,22 @@ parts:
       snapcraftctl pull
       snapcraftctl set-version $(git describe --tag)
     override-build: |
+      # this is dirty but some dependency packages required by connman cannot coexist for multiple architectures
+      # as they are messed up and overlay different files to same location, blame maintainer!
+      # combined with bug in snapcraft when snapcraft is trying to install all the arches at once and we have disaster
+      # way around here is to make sure we install really minimum we need
+      # we assume following scenarios: amd64 native, arm64 native + cross, armhf native + cross
+      if [ "$(arch)" = "x86_64" ] && [ "${SNAPCRAFT_ARCH_TRIPLET}" = "aarch64-linux-gnu" ]; then
+        echo "Cross build to arm64"
+        sudo apt-get install -y libgnutls28-dev:arm64 libmnl-dev:arm64 libidn2-0-dev:arm64
+      elif [ "$(arch)" = "x86_64" ] && [ "${SNAPCRAFT_ARCH_TRIPLET}" = "arm-linux-gnueabihf" ]; then
+        echo "Cross build to armhf"
+        sudo apt-get install -y libgnutls28-dev:armhf libmnl-dev:armhf libidn2-0-dev:armhf
+      else
+        echo "Native build"
+        sudo apt-get install -y libgnutls28-dev libmnl-dev libidn2-0-dev
+      fi
+      echo $(env | grep SNAP)
       snapcraftctl build
       # copy over default config
       mkdir -p ${SNAPCRAFT_PART_INSTALL}/etc/connman
@@ -114,32 +130,23 @@ build-packages:
   - libnftnl-dev
   - to armhf:
     - libudev-dev:armhf
-    - libgnutls28-dev:armhf
-    - libidn2-0-dev:armhf
     - libreadline-dev:armhf
     - libglib2.0-dev:armhf
     - libsystemd-dev:armhf
     - libdbus-1-dev:armhf
     - libxtables-dev:armhf
-    - libmnl-dev:armhf
   - to arm64:
     - libudev-dev:arm64
-    - libgnutls28-dev:arm64
-    - libidn2-0-dev:arm64
     - libreadline-dev:arm64
     - libglib2.0-dev:arm64
     - libsystemd-dev:arm64
     - libdbus-1-dev:arm64
     - libxtables-dev:arm64
-    - libmnl-dev:arm64
   - else:
     - libudev-dev
-    - libgnutls28-dev
-    - libidn2-0-dev
     - libreadline-dev
     - libglib2.0-dev
     - libsystemd-dev
     - libdbus-1-dev
     - libxtables-dev
-    - libmnl-dev
 
