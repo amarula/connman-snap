@@ -39,7 +39,7 @@ apps:
       - connmanctl
 
   connmand:
-    command: usr/sbin/connmand -n -d -c $SNAP_COMMON/etc/connman/main.conf
+    command: usr/sbin/connmand -n -r -d -c $SNAP_COMMON/etc/connman/main.conf
     daemon: simple
     slots:
       - connmand
