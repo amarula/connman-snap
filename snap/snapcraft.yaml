@@ -67,6 +67,7 @@ parts:
       - --prefix=/usr
       - --libdir=/usr/lib
       - --libexecdir=/usr/lib
+      - --localstatedir=/var/snap/connman/common
       - --disable-polkit
       - CFLAGS=-O2
     stage:
